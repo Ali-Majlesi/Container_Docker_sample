@@ -31,7 +31,7 @@ ip link set veth-2 up
 ip link set veth-3 up
 ip link set veth-4 up
 ip link set veth-br1 up
-ip link set veth-br1 up
+ip link set veth-br2 up
 
 # Setting links in other nameapces up
 ip netns exec node1 ip link set dev lo up
@@ -51,16 +51,16 @@ ip netns exec router ip link set dev eth2 up
 # Assign ip to nodes
 ip netns exec node1 ip address add 172.0.0.2/24 dev eth0
 ip netns exec node2 ip address add 172.0.0.3/24 dev eth0
-ip netns exec node3 ip address add 10.0.0.2/24 dev eth0
-ip netns exec node4 ip address add 10.0.0.3/24 dev eth0
-ip netns exec router ip address add 172.0.0.1/24dev eth0
-ip netns exec router ip address add 10.0.0.1/24 dev eth0
+ip netns exec node3 ip address add 10.10.0.2/24 dev eth0
+ip netns exec node4 ip address add 10.10.0.3/24 dev eth0
+ip netns exec router ip address add 172.0.0.1/24 dev eth1
+ip netns exec router ip address add 10.10.0.1/24 dev eth2
 
 # Add default gateway
 ip netns exec node1 ip route add default via 172.0.0.1
 ip netns exec node2 ip route add default via 172.0.0.1
-ip netns exec node3 ip route add default via 10.0.0.1
-ip netns exec node4 ip route add default via 10.0.0.1
+ip netns exec node3 ip route add default via 10.10.0.1
+ip netns exec node4 ip route add default via 10.10.0.1
 
 ip netns exec node1 ip route
 
