@@ -34,4 +34,4 @@ else
 fi
 
 # Start pinging the destination node from the source node
-ip netns exec source_node ping $destination_ip -c 4
+ip netns exec $source_node ping $destination_ip -c 4
