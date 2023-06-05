@@ -24,7 +24,7 @@ ip link set veth-1 master br1
 ip link set veth-2 master br1
 ip link set veth-br1 master br1
 ip link set veth-3 master br2
-ip link set veth-2 master br2
+ip link set veth-4 master br2
 ip link set veth-br2 master br2
 
 
