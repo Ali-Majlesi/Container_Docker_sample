@@ -56,5 +56,11 @@ ip netns exec node4 ip address add 10.0.0.3/24 dev eth0
 ip netns exec router ip address add 172.0.0.1/24dev eth0
 ip netns exec router ip address add 10.0.0.1/24 dev eth0
 
+# Add default gateway
+ip netns exec node1 ip route add default via 172.0.0.1
+ip netns exec node2 ip route add default via 172.0.0.1
+ip netns exec node3 ip route add default via 10.0.0.1
+ip netns exec node4 ip route add default via 10.0.0.1
+
 ip netns exec node1 ip route
 
