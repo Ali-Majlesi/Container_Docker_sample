@@ -38,7 +38,7 @@ ip netns exec node4 ip address add 10.10.0.3/24 dev eth0-node4
 ip netns exec router ip address add 172.0.0.1/24 dev eth1
 ip netns exec router ip address add 10.10.0.1/24 dev eth2
 
-
+ip netns exec router sysctl net.ipv4.ip_forward=1
 
 
 # Setting links in the root namespace up
