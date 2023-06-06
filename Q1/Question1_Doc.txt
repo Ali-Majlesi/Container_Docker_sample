@@ -1,0 +1,12 @@
+four routing packets from one subnet to another:
+
+1. Enable IP forwading: IP forwarding allows the Linux kernel to forward packets between different network interfaces.This can be done by modifying the '/etc/sysctl.conf' file and adding the following line:
+net.ipv4.ip_forward=1
+
+2. Add routing rules to the root namespace using the following lines:
+# Route packets from node1 (172.0.0.2/24) to node3 (10.10.0.2/24)
+ip route add 10.10.0.0/24 via 172.0.0.3 dev br1
+
+# Route packets from node3 (10.10.0.2/24) to node1 (172.0.0.2/24)
+ip route add 172.0.0.0/24 via 10.10.0.3 dev br2
+
