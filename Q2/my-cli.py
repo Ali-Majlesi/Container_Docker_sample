@@ -25,14 +25,16 @@ def connect_to_container(container_id):
     namespaces_dir = f"./namespace/{container_id}"
     
     # Create net, mnt, and uts files inside container's folder
-    net_file = os.path.join(container_dir, "net")
-    mnt_file = os.path.join(container_dir, "mnt")
-    uts_file = os.path.join(container_dir, "uts")
-    usr_file = os.path.join(container_dir, "usr")
+    net_file = os.path.join(namespaces_dir, "net")
+    mnt_file = os.path.join(namespaces_dir, "mnt")
+    uts_file = os.path.join(namespaces_dir, "uts")
+    usr_file = os.path.join(namespaces_dir, "usr")
     
     root_dir = f'./root/{container_id}'
     
-    nsenter_command = f'nsenter --net={net_file} --uts={uts_file} --mount={mnt_file} --user={usr} unshare pf chroot {root_dir} bash
+    cwd_path = os.getcwd()
+    #nsenter_command = f'nsenter --net={net_file} --uts={uts_file} --mount={mnt_file} --user={usr} unshare pf chroot {root_dir} bash'
+    os.system(f'nsenter --user={usr_file} --uts={uts_file} --net={net_file} --mount={mnt_file} unshare -pf chroot {cwd_path}{root_dir[1:]} bash -c "mount -t proc proc /proc && bash"')
     
 def create_container(hostname):
     ubuntu_root_dir = "./ubuntu_root"
@@ -43,6 +45,7 @@ def create_container(hostname):
     else:
         print("Ubuntu 20.04 root filesystem already exists.")
     
+    namespaces_dir = "./namespace"
     # Find the next available container ID
     container_id = 1
     while os.path.exists(os.path.join(namespaces_dir, str(container_id))):
@@ -55,20 +58,25 @@ def create_container(hostname):
     
     
     root_dir = f'./root/{container_id}'
-    os.makedirs(root_dir, exist_ok=True)
-    subprocess.run('cp -r {ubuntu_root_dir}/* {root_dir}/*')
+    #os.makedirs(root_dir, exist_ok=True)
+    
     
     
 
     # Create container's namespace folder
-    container_dir = os.path.join(namespaces_dir, str(container_id))
+    container_dir = root_dir
     os.makedirs(container_dir)
-
+    subprocess.run(['pwd'])
+    subprocess.run(['ls','./namespace'])
+    
+    #subprocess.run(['cp','-r',f'{ubuntu_root_dir}/*',f'{root_dir}/'])
+    os.system(f'cp -r {ubuntu_root_dir}/* {root_dir}')
+    os.system(f'sudo chmod -R o+rwx {root_dir}')
     # Create net, mnt, and uts files inside container's folder
-    net_file = os.path.join(container_dir, "net")
-    mnt_file = os.path.join(container_dir, "mnt")
-    uts_file = os.path.join(container_dir, "uts")
-    usr_file = os.path.join(container_dir, "usr")
+    net_file = os.path.join(namespaces_dir, "net")
+    mnt_file = os.path.join(namespaces_dir, "mnt")
+    uts_file = os.path.join(namespaces_dir, "uts")
+    usr_file = os.path.join(namespaces_dir, "usr")
     open(net_file, 'a').close()
     open(mnt_file, 'a').close()
     open(uts_file, 'a').close()
@@ -80,16 +88,28 @@ def create_container(hostname):
     subprocess.run(['mount', '--make-private', namespaces_dir], check=True)
 
     # Enter the namespaces using unshare
-    unshare_command = ['unshare -pfr', f'--net={net_file}', f'--uts={uts_file}', f'--mount={mnt_file}', f'hostname {hostname}']
+    unshare_command = ['unshare','-pfr', f'--net={net_file}', f'--uts={uts_file}', f'--mount={mnt_file}', f'--user={usr_file}', 'hostname', hostname]
     subprocess.run(unshare_command, check=True)
     print("Container successfully created with ID:", container_id)
     
     # Enter to the created namespaces
-    nsenter_command = f'nsenter --net={net_file} --uts={uts_file} --mount={mnt_file} --user={usr} unshare pf chroot {root_dir} bash -c "mount -t proc proc /proc && bash"'
-    subprocess.run(nsenter_command, check=True)
-
+    #nsenter_command = ['nsenter', f'--net={net_file}', f'--uts={uts_file}', f'--mount={mnt_file}',f'--user={usr_file}' ,'unshare' ,'-pf' ,'chroot' , root_dir, 'bash', '-c', '"mount -t proc proc /proc && bash"']
+    #subprocess.run(nsenter_command, check=True)
+    cwd_path = os.getcwd()
+    os.system(f'nsenter --user={usr_file} --uts={uts_file} --net={net_file} --mount={mnt_file} unshare -pf chroot {cwd_path}{root_dir[1:]} bash -c "mount -t proc proc /proc && bash"')
 def delete_container(container_id):
-    pass
+    # Unmount namespaces
+    os.system(f'umount ./namespace/{container_id}/*')
+    
+    # Unmount namespace folder
+    os.system(f'umount ./namespace/{container_id}')
+    
+    # Remove namespace folder
+    os.system(f'rm -r ./namespace/{container_id}')
+    
+    # Remove root folder
+    os.system(f'rm -r ./root/{container_id}')
+    
     
 if __name__ == '__main__':
     usage_str = 'Usage: python my-cli.py (create <hostname>|list|connect <container_id>|del <container id>)'
@@ -99,7 +119,7 @@ if __name__ == '__main__':
     else:
         command = sys.argv[1]
         if command == 'create':
-            if len(sys.argv < 3):
+            if len(sys.argv) < 3:
                 print('Usage: python my-cli.py create <hostname>')
                 sys.exit(1)
             else:
@@ -107,14 +127,14 @@ if __name__ == '__main__':
                 create_container(hostname)
                 
         elif command == 'list':
-            if len(sys.argv > 3):
+            if len(sys.argv) > 3:
                 print('Usage: python my-cli.py list')
                 sys.exit(1)
             else:
                 list_containers()
                 
-        elif command == 'connnect':
-            if len(sys.argv < 3):
+        elif command == 'connect':
+            if len(sys.argv) < 3:
                 print('Usage: python my-cli.py connect <container id>')
                 sys.exit(1)
             else:
@@ -122,7 +142,7 @@ if __name__ == '__main__':
                 connect_to_container(container_id)
                 
         elif command == 'del':
-            if len(sys.argv < 3):
+            if len(sys.argv) < 3:
                 print('Usage: python my-cli.py del <container id>')
                 sys.exit(1)
             else:
