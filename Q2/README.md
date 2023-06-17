@@ -27,3 +27,11 @@ python3 my-cli.py connect <container_id>
 ```
 Replace `<container_id>` with the ID of the container you want to connect to. This command will open a shell session within the selected container.
 
+## Container Deletion Documentation
+
+### Delete a Container
+To delete a specific container, use the following command:
+```
+python3 my-cli.py del <container_id>
+```
+Replace `<container_id>` with the ID of the container you want to delete. This command will remove the specified container, freeing up system resources associated with it.
